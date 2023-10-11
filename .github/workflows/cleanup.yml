@@ -1,0 +1,38 @@
+name: cleanup
+
+on:
+
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Env name
+        options:
+          - prod
+          - qa
+
+env:
+  AWS_STACK: ${{ format('{0}-{1}-stack', vars.PROJECT_NAME, github.event.inputs.env) }}
+
+jobs:
+  delete-sam:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3.2.0
+
+      - name: Install dotnet lambda tool
+        run: dotnet tool install -g Amazon.Lambda.Tools
+
+      - name: Delete SAM
+        run: |
+            dotnet lambda delete-serverless \
+              --disable-interactive True\
+              -pl ./src/${{ vars.PROJECT_NAME }} \
+              -sn ${{ env.AWS_STACK }} \
+              --region ${{ vars.AWS_REGION }} \
+              --aws-access-key-id ${{ secrets.AWS_ACCESS_KEY }} \
+              --aws-secret-key ${{ secrets.AWS_SECRET_KEY }}

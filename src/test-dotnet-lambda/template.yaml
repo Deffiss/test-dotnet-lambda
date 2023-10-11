@@ -1,0 +1,62 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: An AWS Serverless Application.
+
+Parameters:
+  Env:
+    Type: String
+    Description: The name of the environment
+
+Globals:
+  Function:
+    Runtime: "dotnet6"
+
+Resources:
+
+  Func:
+    Type: AWS::Serverless::Function
+    Properties:
+      Architectures:
+        - arm64
+      Handler: test-dotnet-lambda
+      CodeUri: ''
+      MemorySize: 256
+      Timeout: 30
+      Role: !GetAtt FuncRole.Arn
+      Events:
+          ProxyResource:
+            Type: Api
+            Properties:
+              Path: "/{proxy+}"
+              Method: ANY
+
+  FuncRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:*'
+                  - 'dax:*'
+                Resource: '*'
+
+Outputs:
+  ApiURL:
+    Description: API endpoint URL for Prod environment
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/

@@ -1,0 +1,14 @@
+.DS_Store
+
+#Local Visual Studio settings
+**/.vs
+
+#Build output directories
+**/bin/
+**/obj/
+
+#User-specific project files
+*.user
+/.vscode
+
+/*.log
